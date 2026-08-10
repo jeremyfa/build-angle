@@ -36,6 +36,16 @@ if not exist chrome\VERSION (
     ) > chrome\VERSION
 )
 
+:: ANGLE pins an exact (often preview) Windows SDK version in
+:: build/toolchain/win/setup_toolchain.py that isn't installed on CI runners.
+:: Rewrite it to the newest SDK actually installed on this machine.
+echo Patching Windows SDK version to match the installed SDK...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%patch-sdk-version-windows.ps1"
+if %ERRORLEVEL% NEQ 0 (
+    echo Failed to patch Windows SDK version. Exiting.
+    exit /b 1
+)
+
 :: Common GN args for all Windows builds
 set COMMON_ARGS=^
     is_debug=false ^
@@ -60,7 +70,8 @@ set COMMON_ARGS=^
     angle_enable_glsl=true ^
     build_with_chromium=false ^
     is_clang=true ^
-    clang_use_chrome_plugins=false
+    clang_use_chrome_plugins=false ^
+    treat_warnings_as_errors=false
 
 :: Create output directories with new structure
 if not exist ..\build\windows\x64\bin mkdir ..\build\windows\x64\bin

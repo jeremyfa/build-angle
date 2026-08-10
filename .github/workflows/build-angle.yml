@@ -12,6 +12,7 @@ on:
       - 'build-angle-*.bat'
       - 'setup-angle-*.sh'
       - 'setup-angle-*.bat'
+      - 'patch-sdk-version-*.ps1'
   pull_request:
     branches: [ main ]
     paths:
@@ -20,6 +21,7 @@ on:
       - 'build-angle-*.bat'
       - 'setup-angle-*.sh'
       - 'setup-angle-*.bat'
+      - 'patch-sdk-version-*.ps1'
 
 # Add permissions at the workflow level
 permissions:
