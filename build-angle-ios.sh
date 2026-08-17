@@ -123,6 +123,21 @@ for FRAMEWORK in $FRAMEWORKS; do
     # Create the combined binary using lipo
     lipo -create -output "$COMBINED_SIM_BINARY" "$ARM64_SIM_BINARY" "$X86_64_SIM_BINARY"
 
+    # The simulator build of ANGLE does not emit an Info.plist in its
+    # framework bundles (the device build does). Xcode refuses to embed a
+    # framework without one, so synthesize it from the device framework's
+    # Info.plist with the platform fields adjusted.
+    COMBINED_SIM_PLIST="build/ios/simulator-combined/$FRAMEWORK/Info.plist"
+    DEVICE_PLIST="build/ios/arm64/$FRAMEWORK/Info.plist"
+    if [ ! -f "$COMBINED_SIM_PLIST" ] && [ -f "$DEVICE_PLIST" ]; then
+        echo "Synthesizing simulator Info.plist for $FRAMEWORK..."
+        cp "$DEVICE_PLIST" "$COMBINED_SIM_PLIST"
+        /usr/libexec/PlistBuddy -c "Set :CFBundleSupportedPlatforms:0 iPhoneSimulator" "$COMBINED_SIM_PLIST"
+        /usr/libexec/PlistBuddy -c "Set :DTPlatformName iphonesimulator" "$COMBINED_SIM_PLIST"
+        DEVICE_SDK=$(/usr/libexec/PlistBuddy -c "Print :DTSDKName" "$COMBINED_SIM_PLIST")
+        /usr/libexec/PlistBuddy -c "Set :DTSDKName ${DEVICE_SDK/iphoneos/iphonesimulator}" "$COMBINED_SIM_PLIST"
+    fi
+
     # Verify the architectures in the combined binary
     echo "Verifying architectures in combined simulator binary:"
     lipo -info "$COMBINED_SIM_BINARY"
